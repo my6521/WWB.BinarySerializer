@@ -1,0 +1,26 @@
+@host = http://localhost:5080
+
+### 查看端点
+GET {{host}}/
+
+### 将 JSON 编码为二进制，并在 IDE 中保存响应体
+POST {{host}}/api/packets/encode
+Content-Type: application/json
+
+{
+  "id": 42,
+  "deviceCode": "DEVICE-01",
+  "payloadHex": "A10BFF",
+  "deviceTime": "2026-08-20T14:30:15.123",
+  "billingTime": "2026-08-20T14:30:15",
+  "createdAt": "2026-08-20T06:30:15Z",
+  "timeOfDay": "14:30:00",
+  "description": "上海一号设备",
+  "samples": [10, 20, 30]
+}
+
+### 解码时，请把 encode 的二进制响应保存为 device-packet.bin
+POST {{host}}/api/packets/decode
+Content-Type: application/octet-stream
+
+< ./device-packet.bin
