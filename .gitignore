@@ -6,4 +6,5 @@
 obj/
 bin/
 artifacts/
+BenchmarkDotNet.Artifacts/
 .idea/

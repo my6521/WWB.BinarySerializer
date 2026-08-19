@@ -27,11 +27,19 @@ public sealed class SerializerRuntime
     {
         ArgumentNullException.ThrowIfNull(value);
         var codec = ResolveCodec<T>();
-        var writer = new BufferWriter(bigEndian: (codec as IEndianAwareCodec)?.BigEndian == true);
-        var context = new SerializationContext(Options, _codecs, _valueCodecs);
-        using (context.Enter(typeof(T))) codec.Encode(writer, value, context);
-        EnsurePayloadWithinLimit<T>(writer.Length);
-        return writer.ToArray();
+        var writer = BufferWriter.CreatePooled(
+            bigEndian: (codec as IEndianAwareCodec)?.BigEndian == true);
+        try
+        {
+            var context = new SerializationContext(Options, _codecs, _valueCodecs);
+            using (context.Enter(typeof(T))) codec.Encode(writer, value, context);
+            EnsurePayloadWithinLimit<T>(writer.Length);
+            return writer.ToArray();
+        }
+        finally
+        {
+            writer.Dispose();
+        }
     }
 
     /// <summary>从字节数组反序列化值。</summary>

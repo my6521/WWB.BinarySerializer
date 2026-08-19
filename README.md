@@ -14,6 +14,19 @@
 - 严格验证 UTF-8、ASCII、Hex、BCD、截断载荷和尾随数据
 - Text 与 Time Codec 通过独立 NuGet 包按需引用
 
+## 性能
+
+在 .NET 10、BenchmarkDotNet 默认 Job 下，以启用源生成的 `System.Text.Json` 为对照，本仓库基准模型得到以下本机结果：
+
+| 场景 | Binary | JSON | Binary 相对性能 | Binary 分配 | JSON 分配 |
+|---|---:|---:|---:|---:|---:|
+| 反序列化，8 个采样值 | 448.7 ns | 1,535.1 ns | 3.42 倍 | 296 B | 848 B |
+| 反序列化，256 个采样值 | 1,176.7 ns | 9,424.8 ns | 8.01 倍 | 1,288 B | 3,944 B |
+| 序列化，8 个采样值 | 510.1 ns | 615.5 ns | 1.21 倍 | 264 B | 240 B |
+| 序列化，256 个采样值 | 1,863.1 ns | 3,220.4 ns | 1.73 倍 | 1,256 B | 1,136 B |
+
+结果来自特定机器和测试载荷，只用于观察当前实现的相对趋势，不代表所有业务模型。测试项目、环境信息和复现命令见 [`benchmarks/WWB.BinarySerializer.Benchmarks`](benchmarks/WWB.BinarySerializer.Benchmarks)。
+
 ## 环境要求
 
 - .NET 6.0 或更高版本
