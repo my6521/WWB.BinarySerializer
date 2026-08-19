@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageId>WWB.BinarySerializer.Codecs.Text</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Wwb</Authors>
+    <Description>Text value codecs for WWB.BinarySerializer</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/my6521/WWB.BinarySerializer</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/my6521/WWB.BinarySerializer</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\WWB.BinarySerializer\WWB.BinarySerializer.csproj" />
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

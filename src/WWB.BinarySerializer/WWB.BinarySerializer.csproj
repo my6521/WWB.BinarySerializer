@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	  <TargetFramework>net6.0</TargetFramework>
+	  <ImplicitUsings>enable</ImplicitUsings>
+	  <Nullable>enable</Nullable>
+	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
+	  <PackageId>WWB.BinarySerializer</PackageId>
+	  <Version>1.0.0</Version>
+	  <Authors>Wwb</Authors>
+	  <Description>Source-generated, runtime-isolated binary serialization for .NET</Description>
+	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
+	  <RepositoryUrl>https://github.com/my6521/WWB.BinarySerializer</RepositoryUrl>
+	  <PackageProjectUrl>https://github.com/my6521/WWB.BinarySerializer</PackageProjectUrl>
+	  <PackageReadmeFile>README.md</PackageReadmeFile>
+	  <OpenApiGenerateDocuments>false</OpenApiGenerateDocuments>
+	  <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);PackGenerator</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\WWB.BinarySerializer.Generator\WWB.BinarySerializer.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<None Include="..\..\README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+	<Target Name="PackGenerator">
+		<ItemGroup>
+			<TfmSpecificPackageFile Include="$(MSBuildThisFileDirectory)..\WWB.BinarySerializer.Generator\bin\$(Configuration)\netstandard2.0\WWB.BinarySerializer.Generator.dll">
+				<PackagePath>analyzers/dotnet/cs</PackagePath>
+			</TfmSpecificPackageFile>
+		</ItemGroup>
+	</Target>
+</Project>
