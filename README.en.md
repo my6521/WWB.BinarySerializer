@@ -1,6 +1,6 @@
 # WWB.BinarySerializer
 
-[简体中文](README.md) | [English](README.en.md)
+[简体中文](README.md) | [English](README.en.md) | [Changelog](CHANGELOG.md)
 
 A high-performance binary serialization library for .NET. Contract codecs are produced at compile time by a Source Generator, and the runtime reads and writes buffers directly without reflection-based scanning.
 

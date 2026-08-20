@@ -1,6 +1,6 @@
 # WWB.BinarySerializer
 
-[简体中文](README.md) | [English](README.en.md)
+[简体中文](README.md) | [English](README.en.md) | [版本日志](CHANGELOG.md)
 
 面向 .NET 的高性能二进制序列化库。契约 Codec 在编译期通过 Source Generator 生成，运行时直接读写缓冲区，不进行反射扫描。
 
