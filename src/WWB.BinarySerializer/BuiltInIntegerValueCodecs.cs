@@ -44,7 +44,7 @@ internal static class BuiltInIntegerValueCodecs
             _bigEndian = bigEndian;
         }
 
-        public void Encode(BufferWriter writer, int value, SerializationContext context)
+        public void Encode(BufferWriter writer, int value, SerializationContext context, ValueCodecOptions options)
         {
             var bits = _byteCount * 8;
             var minimum = _signed ? -(1 << (bits - 1)) : 0;
@@ -59,7 +59,7 @@ internal static class BuiltInIntegerValueCodecs
             }
         }
 
-        public int Decode(ref BufferReader reader, SerializationContext context)
+        public int Decode(ref BufferReader reader, SerializationContext context, ValueCodecOptions options)
         {
             var value = 0;
             for (var index = 0; index < _byteCount; index++)

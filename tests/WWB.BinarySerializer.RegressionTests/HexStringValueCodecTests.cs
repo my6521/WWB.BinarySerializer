@@ -12,7 +12,7 @@ public class HexStringValueCodecTests
     [InlineData("abcd", new byte[] { 2, 0xAB, 0xCD })]
     public void RoundTrip_LengthPrefixedHex_UsesBinaryByteLength(string value, byte[] expected)
     {
-        var runtime = new SerializerBuilder().AddHexCodec().Build();
+        var runtime = new SerializerBuilder().AddHexCodecs().Build();
 
         var payload = runtime.Serialize(new HexStringContract { Value = value });
         var result = runtime.Deserialize<HexStringContract>(payload);
@@ -24,9 +24,7 @@ public class HexStringValueCodecTests
     [Fact]
     public void RoundTrip_FixedLengthHex_HasNoPrefix()
     {
-        var runtime = new SerializerBuilder()
-            .AddValueCodec("hex-2", new FixedLengthHexStringValueCodec(2))
-            .Build();
+        var runtime = new SerializerBuilder().AddHexCodecs().Build();
 
         var payload = runtime.Serialize(new FixedHexStringContract { Value = "ABCD" });
 
@@ -40,7 +38,7 @@ public class HexStringValueCodecTests
     [InlineData("00 11")]
     public void Serialize_Hex_RejectsMalformedInput(string value)
     {
-        var runtime = new SerializerBuilder().AddHexCodec().Build();
+        var runtime = new SerializerBuilder().AddHexCodecs().Build();
 
         Assert.Throws<FormatException>(() => runtime.Serialize(new HexStringContract { Value = value }));
     }
@@ -48,9 +46,7 @@ public class HexStringValueCodecTests
     [Fact]
     public void Serialize_FixedLengthHex_RejectsWrongByteLength()
     {
-        var runtime = new SerializerBuilder()
-            .AddValueCodec("hex-2", new FixedLengthHexStringValueCodec(2))
-            .Build();
+        var runtime = new SerializerBuilder().AddHexCodecs().Build();
 
         Assert.Throws<ArgumentException>(() =>
             runtime.Serialize(new FixedHexStringContract { Value = "AA" }));
@@ -67,6 +63,6 @@ public sealed class HexStringContract
 [BinaryContract]
 public sealed class FixedHexStringContract
 {
-    [BinaryField(1, ValueCodecName = "hex-2")]
+    [BinaryField(1, FixedLength = 2, ValueCodecName = FixedLengthHexStringValueCodec.CodecName)]
     public string Value { get; set; } = string.Empty;
 }

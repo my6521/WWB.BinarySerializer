@@ -6,13 +6,25 @@ Strict text codecs for `WWB.BinarySerializer`.
 using WWB.BinarySerializer.Codecs.Text;
 
 var runtime = new SerializerBuilder()
-    .AddAsciiCodec()
+    .AddAsciiCodecs()
     .Build();
 
 [BinaryField(1, ValueCodecName = LengthPrefixedAsciiStringValueCodec.CodecName)]
 public string DeviceCode { get; set; } = string.Empty;
 ```
 
-`LengthPrefixedAsciiStringValueCodec` supports length prefixes from one through four bytes. `FixedLengthAsciiStringValueCodec` provides exact-length, prefix-free ASCII fields. Both reject non-ASCII characters and bytes.
+Use `AddHexCodecs()` for both length-prefixed and fixed-length Hex codecs, or `AddTextCodecs()` to register all ASCII and Hex codecs.
 
-`LengthPrefixedHexStringValueCodec` and `FixedLengthHexStringValueCodec` encode hexadecimal text as binary bytes. Odd-length input and non-hexadecimal characters are rejected with `FormatException`; decoded text is normalized to uppercase.
+`LengthPrefixedAsciiStringValueCodec` uses the field's `LengthPrefixSize`, from one through four bytes. `FixedLengthAsciiStringValueCodec` uses the field's `FixedLength` and provides exact-length, prefix-free ASCII fields:
+
+```csharp
+[BinaryField(
+    1,
+    FixedLength = 8,
+    ValueCodecName = FixedLengthAsciiStringValueCodec.CodecName)]
+public string DeviceCode { get; set; } = string.Empty;
+```
+
+Both reject non-ASCII characters and bytes.
+
+`LengthPrefixedHexStringValueCodec` and `FixedLengthHexStringValueCodec` encode hexadecimal text as binary bytes. For fixed Hex fields, `FixedLength` is the binary byte count, so `FixedLength = 2` requires four Hex characters. Odd-length input and non-hexadecimal characters are rejected with `FormatException`; decoded text is normalized to uppercase.

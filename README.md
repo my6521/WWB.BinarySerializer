@@ -97,7 +97,7 @@ var result = BinarySerializer.DeserializeObject<DevicePacket>(payload);
 
 ### BinaryContract
 
-`BinaryContractAttribute` 标记需要生成 Codec 的类。
+`BinaryContractAttribute` 标记需要生成 Codec 的 class 或 record class。
 
 ```csharp
 [BinaryContract(EndianType = EndianType.Little)]
@@ -107,15 +107,16 @@ public sealed class Packet
 ```
 
 `EndianType` 控制多字节数值和长度前缀的字节序，默认为小端。
+`Size` 指定序列化写入缓冲区的初始容量提示，默认为 `512`；该值只影响分配性能，不改变线格式，并会被 Runtime 限制在最大载荷以内。
 
 ### BinaryField
 
 | 属性 | 含义 | 默认值 |
 |---|---|---:|
 | `Order` | 字段序列化顺序 | `0` |
-| `FixedLength` | 字节数组或集合的固定长度 | `0`，表示写入长度前缀 |
+| `FixedLength` | 字节数组、集合或 Value Codec 字段的固定长度 | `0`，表示未配置固定长度 |
 | `Ignore` | 是否忽略该字段 | `false` |
-| `LengthPrefixSize` | 变长字符串、字节数组或集合的长度前缀字节数 | `1` |
+| `LengthPrefixSize` | 变长字符串、字节数组、集合或 Value Codec 的长度前缀字节数 | `1` |
 | `ValueCodecName` | 字段或集合元素使用的具名 Value Codec | `null` |
 
 字段按 `Order` 排序；顺序相同时按源码声明位置稳定排序。
@@ -160,12 +161,14 @@ public sealed class OffsetIntValueCodec : IValueCodec<int>
     public void Encode(
         BufferWriter writer,
         int value,
-        SerializationContext context) =>
+        SerializationContext context,
+        ValueCodecOptions options) =>
         writer.WriteInt32(value + 10);
 
     public int Decode(
         ref BufferReader reader,
-        SerializationContext context) =>
+        SerializationContext context,
+        ValueCodecOptions options) =>
         reader.ReadInt32() - 10;
 }
 ```
@@ -273,9 +276,13 @@ public string PayloadHex { get; set; } = string.Empty;
 定长 Codec 需要使用自定义名称注册：
 
 ```csharp
-var runtime = new SerializerBuilder()
-    .AddValueCodec("hex-8", new FixedLengthHexStringValueCodec(8))
-    .Build();
+var runtime = new SerializerBuilder().AddHexCodecs().Build();
+
+[BinaryField(
+    1,
+    FixedLength = 8,
+    ValueCodecName = FixedLengthHexStringValueCodec.CodecName)]
+public string Signature { get; set; } = string.Empty;
 ```
 
 ## Time Codecs

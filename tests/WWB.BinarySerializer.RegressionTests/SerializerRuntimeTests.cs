@@ -186,6 +186,20 @@ public class SerializerRuntimeTests
         Assert.Equal(2, exception.MaximumLength);
         Assert.Equal(typeof(RuntimeContract), exception.ContractType);
     }
+
+    [Fact]
+    public void CollectionElementCodec_ReceivesDefaultOptionsInsteadOfContainerFraming()
+    {
+        var runtime = new SerializerBuilder()
+            .AddValueCodec("default-options", new DefaultOptionsIntCodec())
+            .Build();
+        var value = new FixedValueCodecCollectionContract { Values = new List<int> { 1, 2 } };
+
+        var bytes = runtime.Serialize(value);
+
+        Assert.Equal(new byte[] { 1, 2 }, bytes);
+        Assert.Equal(value.Values, runtime.Deserialize<FixedValueCodecCollectionContract>(bytes).Values);
+    }
 }
 
 public sealed class ValueCodecContract { public int Value { get; set; } }
@@ -205,6 +219,13 @@ public sealed class GeneratedValueCodecCollectionContract
 }
 
 [BinaryContract]
+public sealed class FixedValueCodecCollectionContract
+{
+    [BinaryField(1, FixedLength = 2, LengthPrefixSize = 4, ValueCodecName = "default-options")]
+    public List<int> Values { get; set; } = new();
+}
+
+[BinaryContract]
 public sealed class MultipleNamedCodecContract
 {
     [BinaryField(1, ValueCodecName = "offset-10")]
@@ -217,18 +238,35 @@ public sealed class MultipleNamedCodecContract
 internal sealed class ValueCodecContractCodec : IBinaryCodec<ValueCodecContract>
 {
     public void Encode(BufferWriter writer, ValueCodecContract value, SerializationContext context) =>
-        context.GetValueCodec<int>("offset").Encode(writer, value.Value, context);
+        context.GetValueCodec<int>("offset").Encode(writer, value.Value, context, ValueCodecOptions.Default);
 
     public ValueCodecContract Decode(ref BufferReader reader, SerializationContext context) =>
-        new() { Value = context.GetValueCodec<int>("offset").Decode(ref reader, context) };
+        new() { Value = context.GetValueCodec<int>("offset").Decode(ref reader, context, ValueCodecOptions.Default) };
 }
 
 internal sealed class OffsetValueCodec : IValueCodec<int>
 {
     private readonly int _offset;
     public OffsetValueCodec(int offset) => _offset = offset;
-    public void Encode(BufferWriter writer, int value, SerializationContext context) => writer.WriteInt32(value + _offset);
-    public int Decode(ref BufferReader reader, SerializationContext context) => reader.ReadInt32() - _offset;
+    public void Encode(BufferWriter writer, int value, SerializationContext context, ValueCodecOptions options) => writer.WriteInt32(value + _offset);
+    public int Decode(ref BufferReader reader, SerializationContext context, ValueCodecOptions options) => reader.ReadInt32() - _offset;
+}
+
+internal sealed class DefaultOptionsIntCodec : IValueCodec<int>
+{
+    public void Encode(BufferWriter writer, int value, SerializationContext context, ValueCodecOptions options)
+    {
+        Assert.Equal(ValueCodecOptions.Default.FixedLength, options.FixedLength);
+        Assert.Equal(ValueCodecOptions.Default.LengthPrefixSize, options.LengthPrefixSize);
+        writer.WriteByte(checked((byte)value));
+    }
+
+    public int Decode(ref BufferReader reader, SerializationContext context, ValueCodecOptions options)
+    {
+        Assert.Equal(ValueCodecOptions.Default.FixedLength, options.FixedLength);
+        Assert.Equal(ValueCodecOptions.Default.LengthPrefixSize, options.LengthPrefixSize);
+        return reader.ReadByte();
+    }
 }
 
 public sealed class NativeRuntimeContract

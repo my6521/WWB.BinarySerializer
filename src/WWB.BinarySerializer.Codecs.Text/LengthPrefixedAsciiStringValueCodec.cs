@@ -8,30 +8,21 @@ public sealed class LengthPrefixedAsciiStringValueCodec : IValueCodec<string>
 {
     /// <summary>获取标准注册名称。</summary>
     public const string CodecName = "ascii";
-    private readonly int _lengthPrefixSize;
-
-    /// <summary>使用 1 至 4 字节长度前缀初始化 Codec。</summary>
-    public LengthPrefixedAsciiStringValueCodec(int lengthPrefixSize = 1)
-    {
-        if (lengthPrefixSize is < 1 or > sizeof(int))
-            throw new ArgumentOutOfRangeException(nameof(lengthPrefixSize), lengthPrefixSize, "Length prefix size must be between 1 and 4 bytes.");
-        _lengthPrefixSize = lengthPrefixSize;
-    }
-
     /// <inheritdoc />
-    public void Encode(BufferWriter writer, string value, SerializationContext context)
+    public void Encode(BufferWriter writer, string value, SerializationContext context, ValueCodecOptions options)
     {
         ArgumentNullException.ThrowIfNull(writer);
+        ArgumentNullException.ThrowIfNull(value);
+        context.ValidateStringLength(value.Length, typeof(string));
         var bytes = AsciiEncoding.Encode(value);
-        context.ValidateStringLength(bytes.Length, typeof(string));
-        writer.WriteLength(bytes.Length, _lengthPrefixSize);
+        writer.WriteLength(bytes.Length, options.LengthPrefixSize);
         writer.Write(bytes);
     }
 
     /// <inheritdoc />
-    public string Decode(ref BufferReader reader, SerializationContext context)
+    public string Decode(ref BufferReader reader, SerializationContext context, ValueCodecOptions options)
     {
-        var length = reader.ReadLength(_lengthPrefixSize);
+        var length = reader.ReadLength(options.LengthPrefixSize);
         context.ValidateStringLength(length, typeof(string));
         return AsciiEncoding.Decode(reader.ReadSpan(length));
     }

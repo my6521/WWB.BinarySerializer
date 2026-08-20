@@ -6,7 +6,7 @@
 	  <Nullable>enable</Nullable>
 	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
 	  <PackageId>WWB.BinarySerializer</PackageId>
-	  <Version>1.0.2</Version>
+	  <Version>1.0.3</Version>
 	  <Authors>Wwb</Authors>
 	  <Description>Source-generated, runtime-isolated binary serialization for .NET</Description>
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>

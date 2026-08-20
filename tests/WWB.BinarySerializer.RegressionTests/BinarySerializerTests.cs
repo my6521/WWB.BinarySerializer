@@ -28,6 +28,17 @@ public class BinarySerializerTests
     }
 
     [Fact]
+    public void RecordClass_RoundTripsThroughGeneratedCodec()
+    {
+        var value = new RecordPacket { Value = 123 };
+
+        var bytes = BinarySerializer.SerializeObject(value);
+
+        Assert.Equal(new byte[] { 123, 0, 0, 0 }, bytes);
+        Assert.Equal(value, BinarySerializer.DeserializeObject<RecordPacket>(bytes));
+    }
+
+    [Fact]
     public void SerializeAndDeserialize_SByteAndChar_RoundTripsUsingConfiguredEndian()
     {
         var source = new CharacterPacket { SignedValue = -1, Character = '\u4E2D' };
@@ -83,6 +94,14 @@ public class BinarySerializerTests
 
         Assert.Equal(702, bytes.Length);
         Assert.Equal(source.Data, result.Data);
+    }
+
+    [Fact]
+    public void BinaryContract_SizeIsExposedAsGeneratedBufferCapacityHint()
+    {
+        var codec = Assert.IsAssignableFrom<IBufferCapacityHint>(GeneratedCodecRegistry<LargePayload>.Instance);
+
+        Assert.Equal(1, codec.InitialCapacity);
     }
 
     [Fact]
@@ -168,11 +187,27 @@ public class BinarySerializerTests
     }
 
     [Fact]
+    public void ValueCodecOptions_RejectInvalidLengths()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => new WWB.BinarySerializer.Runtime.ValueCodecOptions(-1, 1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new WWB.BinarySerializer.Runtime.ValueCodecOptions(0, 0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new WWB.BinarySerializer.Runtime.ValueCodecOptions(0, 5));
+    }
+
+    [Fact]
     public void BinaryField_FixedLengthMustBePositive()
     {
         var field = new BinaryFieldAttribute();
 
         Assert.Throws<ArgumentOutOfRangeException>(() => field.FixedLength = 0);
+    }
+
+    [Fact]
+    public void BinaryContract_SizeMustBePositive()
+    {
+        var contract = new BinaryContractAttribute();
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => contract.Size = 0);
     }
 
     [Fact]
@@ -306,6 +341,13 @@ public class PacketItem
 {
     [BinaryField(1)] public byte Id { get; set; }
     [BinaryField(2)] public int Value { get; set; }
+}
+
+[BinaryContract]
+public sealed record RecordPacket
+{
+    [BinaryField(1)]
+    public int Value { get; set; }
 }
 
 [BinaryContract(Size = 1)]

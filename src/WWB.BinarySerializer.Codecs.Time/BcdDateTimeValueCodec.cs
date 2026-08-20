@@ -10,7 +10,7 @@ public sealed class BcdDateTimeValueCodec : IValueCodec<DateTime>
     public const string CodecName = "bcd-datetime";
 
     /// <inheritdoc />
-    public void Encode(BufferWriter writer, DateTime value, SerializationContext context)
+    public void Encode(BufferWriter writer, DateTime value, SerializationContext context, ValueCodecOptions options)
     {
         ArgumentNullException.ThrowIfNull(writer);
         Span<byte> bytes = stackalloc byte[7];
@@ -25,7 +25,7 @@ public sealed class BcdDateTimeValueCodec : IValueCodec<DateTime>
     }
 
     /// <inheritdoc />
-    public DateTime Decode(ref BufferReader reader, SerializationContext context)
+    public DateTime Decode(ref BufferReader reader, SerializationContext context, ValueCodecOptions options)
     {
         var bytes = reader.ReadSpan(7);
         var year = PackedBcd.Decode(bytes[0]) * 100 + PackedBcd.Decode(bytes[1]);

@@ -27,7 +27,10 @@ public sealed class SerializerRuntime
     {
         ArgumentNullException.ThrowIfNull(value);
         var codec = ResolveCodec<T>();
+        var capacityHint = (codec as IBufferCapacityHint)?.InitialCapacity ?? 256;
+        var initialCapacity = Math.Min(Math.Max(capacityHint, 1), Options.MaxPayloadLength);
         var writer = BufferWriter.CreatePooled(
+            initialCapacity: initialCapacity,
             bigEndian: (codec as IEndianAwareCodec)?.BigEndian == true);
         try
         {

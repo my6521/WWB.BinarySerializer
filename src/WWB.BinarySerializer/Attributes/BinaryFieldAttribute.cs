@@ -23,7 +23,7 @@ public sealed class BinaryFieldAttribute : Attribute
     /// <summary>获取字段的序列化顺序。</summary>
     public int Order { get; }
 
-    /// <summary>获取或设置集合或字节序列的固定长度；零表示使用长度前缀。</summary>
+    /// <summary>获取或设置集合、字节序列或 Value Codec 字段的固定长度；零表示未配置。</summary>
     public int FixedLength
     {
         get => _fixedLength;
@@ -38,7 +38,7 @@ public sealed class BinaryFieldAttribute : Attribute
     /// <summary>获取或设置是否从序列化中排除该字段。</summary>
     public bool Ignore { get; set; }
 
-    /// <summary>获取或设置变长字段长度前缀的字节数。</summary>
+    /// <summary>获取或设置变长字段或 Value Codec 使用的长度前缀字节数。</summary>
     public int LengthPrefixSize
     {
         get => _lengthPrefixSize;

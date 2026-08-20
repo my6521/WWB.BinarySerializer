@@ -20,6 +20,13 @@ public interface IEndianAwareCodec
     bool BigEndian { get; }
 }
 
+/// <summary>为序列化写入缓冲区提供不影响线格式的初始容量提示。</summary>
+public interface IBufferCapacityHint
+{
+    /// <summary>获取建议的初始缓冲区容量（字节数）。</summary>
+    int InitialCapacity { get; }
+}
+
 /// <summary>保存为契约类型注册的源生成 Codec。</summary>
 public static class GeneratedCodecRegistry<T>
 {

@@ -6,11 +6,11 @@ namespace WWB.BinarySerializer.Runtime;
 /// <typeparam name="T">字段或集合元素类型。</typeparam>
 public interface IValueCodec<T>
 {
-    /// <summary>将值编码到目标写入器。</summary>
-    void Encode(BufferWriter writer, T value, SerializationContext context);
+    /// <summary>根据当前字段配置将值编码到目标写入器。</summary>
+    void Encode(BufferWriter writer, T value, SerializationContext context, ValueCodecOptions options);
 
-    /// <summary>从源读取器解码值。</summary>
-    T Decode(ref BufferReader reader, SerializationContext context);
+    /// <summary>根据当前字段配置从源读取器解码值。</summary>
+    T Decode(ref BufferReader reader, SerializationContext context, ValueCodecOptions options);
 }
 
 internal interface IValueCodecProvider

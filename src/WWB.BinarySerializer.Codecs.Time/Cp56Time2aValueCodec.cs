@@ -12,7 +12,7 @@ public sealed class Cp56Time2aValueCodec : IValueCodec<DateTime>
     public const string CodecName = "cp56time2a";
 
     /// <inheritdoc />
-    public void Encode(BufferWriter writer, DateTime value, SerializationContext context)
+    public void Encode(BufferWriter writer, DateTime value, SerializationContext context, ValueCodecOptions options)
     {
         ArgumentNullException.ThrowIfNull(writer);
 
@@ -34,7 +34,7 @@ public sealed class Cp56Time2aValueCodec : IValueCodec<DateTime>
     }
 
     /// <inheritdoc />
-    public DateTime Decode(ref BufferReader reader, SerializationContext context)
+    public DateTime Decode(ref BufferReader reader, SerializationContext context, ValueCodecOptions options)
     {
         var bytes = reader.ReadSpan(7);
         var milliseconds = bytes[0] | (bytes[1] << 8);

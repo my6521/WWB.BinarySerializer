@@ -10,7 +10,7 @@ public sealed class BcdTimeSpanValueCodec : IValueCodec<TimeSpan>
     public const string CodecName = "bcd-timespan";
 
     /// <inheritdoc />
-    public void Encode(BufferWriter writer, TimeSpan value, SerializationContext context)
+    public void Encode(BufferWriter writer, TimeSpan value, SerializationContext context, ValueCodecOptions options)
     {
         ArgumentNullException.ThrowIfNull(writer);
         if (value < TimeSpan.Zero || value >= TimeSpan.FromDays(1))
@@ -23,7 +23,7 @@ public sealed class BcdTimeSpanValueCodec : IValueCodec<TimeSpan>
     }
 
     /// <inheritdoc />
-    public TimeSpan Decode(ref BufferReader reader, SerializationContext context)
+    public TimeSpan Decode(ref BufferReader reader, SerializationContext context, ValueCodecOptions options)
     {
         var bytes = reader.ReadSpan(2);
         var hours = PackedBcd.Decode(bytes[0]);

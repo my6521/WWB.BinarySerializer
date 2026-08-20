@@ -12,7 +12,7 @@ internal static class FieldEmitter
         var valueCodec = ValueCodecName(attribute);
         if (valueCodec != null && !TypeShape.IsCollection(property.Type, out _))
         {
-            source.AppendLine($"context.GetValueCodec<{TypeName(property.Type)}>({StringLiteral(valueCodec)}).Encode(writer, {Member(property)}, context);");
+            source.AppendLine($"context.GetValueCodec<{TypeName(property.Type)}>({StringLiteral(valueCodec)}).Encode(writer, {Member(property)}, context, {ValueCodecOptions(attribute)});");
             return;
         }
         if (property.Type.SpecialType == SpecialType.System_String)
@@ -34,8 +34,10 @@ internal static class FieldEmitter
         if (TypeShape.IsCollection(property.Type, out var element))
         {
             WriteCollectionPrefix(source, property, attribute, property.Type is IArrayTypeSymbol ? $"{Member(property)}.Length" : $"{Member(property)}.Count");
+            if (valueCodec != null)
+                source.AppendLine($"var valueCodec_{property.Name} = context.GetValueCodec<{TypeName(element)}>({StringLiteral(valueCodec)}); var valueCodecOptions_{property.Name} = global::WWB.BinarySerializer.Runtime.ValueCodecOptions.Default;");
             source.AppendLine($"foreach (var item in {Member(property)}) {{");
-            if (valueCodec != null) source.AppendLine($"context.GetValueCodec<{TypeName(element)}>({StringLiteral(valueCodec)}).Encode(writer, item, context);");
+            if (valueCodec != null) source.AppendLine($"valueCodec_{property.Name}.Encode(writer, item, context, valueCodecOptions_{property.Name});");
             else if (TypeShape.IsObject(element)) WriteObject(source, element, "item");
             else WriteValue(source, element, "item");
             source.AppendLine("}");
@@ -49,7 +51,7 @@ internal static class FieldEmitter
         var valueCodec = ValueCodecName(attribute);
         if (valueCodec != null && !TypeShape.IsCollection(property.Type, out _))
         {
-            source.AppendLine($"{Member(property)} = context.GetValueCodec<{TypeName(property.Type)}>({StringLiteral(valueCodec)}).Decode(ref reader, context);");
+            source.AppendLine($"{Member(property)} = context.GetValueCodec<{TypeName(property.Type)}>({StringLiteral(valueCodec)}).Decode(ref reader, context, {ValueCodecOptions(attribute)});");
             return;
         }
         if (property.Type.SpecialType == SpecialType.System_String)
@@ -113,9 +115,9 @@ internal static class FieldEmitter
         {
             var getCodec = $"context.GetValueCodec<{elementName}>({StringLiteral(valueCodec)})";
             if (property.Type is IArrayTypeSymbol)
-                source.AppendLine($"var values_{property.Name} = new {elementName}[count_{property.Name}]; var valueCodec_{property.Name} = {getCodec}; for (var i = 0; i < count_{property.Name}; i++) values_{property.Name}[i] = valueCodec_{property.Name}.Decode(ref reader, context); {Member(property)} = values_{property.Name};");
+                source.AppendLine($"var values_{property.Name} = new {elementName}[count_{property.Name}]; var valueCodec_{property.Name} = {getCodec}; var valueCodecOptions_{property.Name} = global::WWB.BinarySerializer.Runtime.ValueCodecOptions.Default; for (var i = 0; i < count_{property.Name}; i++) values_{property.Name}[i] = valueCodec_{property.Name}.Decode(ref reader, context, valueCodecOptions_{property.Name}); {Member(property)} = values_{property.Name};");
             else
-                source.AppendLine($"var values_{property.Name} = new global::System.Collections.Generic.List<{elementName}>(count_{property.Name}); var valueCodec_{property.Name} = {getCodec}; for (var i = 0; i < count_{property.Name}; i++) values_{property.Name}.Add(valueCodec_{property.Name}.Decode(ref reader, context)); {Member(property)} = values_{property.Name};");
+                source.AppendLine($"var values_{property.Name} = new global::System.Collections.Generic.List<{elementName}>(count_{property.Name}); var valueCodec_{property.Name} = {getCodec}; var valueCodecOptions_{property.Name} = global::WWB.BinarySerializer.Runtime.ValueCodecOptions.Default; for (var i = 0; i < count_{property.Name}; i++) values_{property.Name}.Add(valueCodec_{property.Name}.Decode(ref reader, context, valueCodecOptions_{property.Name})); {Member(property)} = values_{property.Name};");
         }
         else if (property.Type is IArrayTypeSymbol)
             source.AppendLine(TypeShape.IsObject(element)
@@ -161,6 +163,9 @@ internal static class FieldEmitter
 
     private static string? ValueCodecName(AttributeData attribute) =>
         attribute.NamedArguments.FirstOrDefault(x => x.Key == "ValueCodecName").Value.Value as string;
+
+    private static string ValueCodecOptions(AttributeData attribute) =>
+        $"new global::WWB.BinarySerializer.Runtime.ValueCodecOptions({NamedInt(attribute, "FixedLength", 0)}, {NamedInt(attribute, "LengthPrefixSize", 1)})";
 
     private static int NamedInt(AttributeData attribute, string name, int fallback) =>
         attribute.NamedArguments.FirstOrDefault(x => x.Key == name).Value.Value is int value ? value : fallback;

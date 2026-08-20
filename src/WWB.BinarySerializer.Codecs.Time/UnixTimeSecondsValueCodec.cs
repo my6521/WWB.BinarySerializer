@@ -10,13 +10,13 @@ public sealed class UnixTimeSecondsValueCodec : IValueCodec<DateTime>
     public const string CodecName = "unix-time-seconds";
 
     /// <inheritdoc />
-    public void Encode(BufferWriter writer, DateTime value, SerializationContext context)
+    public void Encode(BufferWriter writer, DateTime value, SerializationContext context, ValueCodecOptions options)
     {
         ArgumentNullException.ThrowIfNull(writer);
         writer.WriteUInt32(UnixTime.ToUInt32Seconds(value));
     }
 
     /// <inheritdoc />
-    public DateTime Decode(ref BufferReader reader, SerializationContext context) =>
+    public DateTime Decode(ref BufferReader reader, SerializationContext context, ValueCodecOptions options) =>
         UnixTime.FromUInt32Seconds(reader.ReadUInt32());
 }
