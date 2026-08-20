@@ -9,6 +9,12 @@ public sealed class SerializerBuilder
     private readonly Dictionary<(Type Type, string Name), object> _valueCodecs = new();
     private SerializerOptions _options = SerializerOptions.Default;
 
+    /// <summary>创建已注册内置 Value Codec 的序列化构建器。</summary>
+    public SerializerBuilder()
+    {
+        BuiltInIntegerValueCodecs.Register(this);
+    }
+
     /// <summary>设置该构建器所创建运行时的安全和载荷选项。</summary>
     /// <param name="options">已验证的序列化选项。</param>
     /// <returns>当前构建器。</returns>

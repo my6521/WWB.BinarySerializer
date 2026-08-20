@@ -7,9 +7,9 @@ namespace WWB.BinarySerializer.RegressionTests;
 public class IntegerValueCodecTests
 {
     [Fact]
-    public void AddIntegerValueCodecs_UsesExactWireFormats()
+    public void BuiltInIntegerValueCodecs_UseExactWireFormats()
     {
-        var runtime = new SerializerBuilder().AddIntegerValueCodecs().Build();
+        var runtime = new SerializerBuilder().Build();
         var value = new IntegerWireContract
         {
             UInt8 = 255,
@@ -40,7 +40,7 @@ public class IntegerValueCodecTests
     [Fact]
     public void UInt8Codec_IsAppliedToEveryListElement()
     {
-        var runtime = new SerializerBuilder().AddIntegerValueCodecs().Build();
+        var runtime = new SerializerBuilder().Build();
         var value = new UInt8ListContract { Values = new List<int> { 0, 127, 255 } };
 
         var bytes = runtime.Serialize(value);
@@ -49,12 +49,71 @@ public class IntegerValueCodecTests
         Assert.Equal(value.Values, runtime.Deserialize<UInt8ListContract>(bytes).Values);
     }
 
+    [Fact]
+    public void BuiltInIntegerValueCodecs_PreserveBoundaryValues()
+    {
+        var runtime = new SerializerBuilder().Build();
+        var value = new IntegerWireContract
+        {
+            UInt8 = 0,
+            Int8 = 127,
+            UInt16LittleEndian = 65535,
+            UInt16BigEndian = 65535,
+            Int16LittleEndian = -32768,
+            Int16BigEndian = -32768,
+            UInt24LittleEndian = 16777215,
+            UInt24BigEndian = 16777215,
+            Int24LittleEndian = -8388608,
+            Int24BigEndian = -8388608
+        };
+
+        var bytes = runtime.Serialize(value);
+
+        Assert.Equal(new byte[]
+        {
+            0x00, 0x7F,
+            0xFF, 0xFF, 0xFF, 0xFF,
+            0x00, 0x80, 0x80, 0x00,
+            0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+            0x00, 0x00, 0x80, 0x80, 0x00, 0x00
+        }, bytes);
+        Assert.Equivalent(value, runtime.Deserialize<IntegerWireContract>(bytes));
+    }
+
+    [Fact]
+    public void ExplicitIntegerEndianness_OverridesContractEndianness()
+    {
+        var runtime = new SerializerBuilder().Build();
+        var value = new BigEndianIntegerWireContract
+        {
+            LittleEndian = 0x1234,
+            BigEndian = 0x1234
+        };
+
+        var bytes = runtime.Serialize(value);
+
+        Assert.Equal(new byte[] { 0x34, 0x12, 0x12, 0x34 }, bytes);
+        Assert.Equivalent(value, runtime.Deserialize<BigEndianIntegerWireContract>(bytes));
+    }
+
+    [Fact]
+    public void ReplacingBuiltInCodec_IsIsolatedToCurrentRuntime()
+    {
+        var replaced = new SerializerBuilder()
+            .ReplaceValueCodec(Int32WireCodecs.UInt8, new OffsetValueCodec(10))
+            .Build();
+        var standard = new SerializerBuilder().Build();
+
+        Assert.Equal(new byte[] { 11, 0, 0, 0 }, replaced.Serialize(new UInt8Contract { Value = 1 }));
+        Assert.Equal(new byte[] { 1 }, standard.Serialize(new UInt8Contract { Value = 1 }));
+    }
+
     [Theory]
     [InlineData(-1)]
     [InlineData(256)]
     public void UInt8Codec_RejectsOutOfRangeValues(int value)
     {
-        var runtime = new SerializerBuilder().AddIntegerValueCodecs().Build();
+        var runtime = new SerializerBuilder().Build();
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             runtime.Serialize(new UInt8Contract { Value = value }));
@@ -63,20 +122,12 @@ public class IntegerValueCodecTests
     [Fact]
     public void Int24Codec_RejectsTruncatedPayload()
     {
-        var runtime = new SerializerBuilder().AddIntegerValueCodecs().Build();
+        var runtime = new SerializerBuilder().Build();
 
         Assert.Throws<SerializationException>(() =>
             runtime.Deserialize<Int24Contract>(new byte[] { 0x01, 0x02 }));
     }
 
-    [Fact]
-    public void IntegerCodec_MustBeRegistered()
-    {
-        var runtime = new SerializerBuilder().Build();
-
-        Assert.Throws<CodecNotFoundException>(() =>
-            runtime.Serialize(new UInt8Contract { Value = 1 }));
-    }
 }
 
 [BinaryContract]
@@ -113,4 +164,14 @@ public sealed class UInt8ListContract
 {
     [BinaryField(1, ValueCodecName = Int32WireCodecs.UInt8)]
     public List<int> Values { get; set; } = new();
+}
+
+[BinaryContract(EndianType = EndianType.Big)]
+public sealed class BigEndianIntegerWireContract
+{
+    [BinaryField(1, ValueCodecName = Int32WireCodecs.UInt16LittleEndian)]
+    public int LittleEndian { get; set; }
+
+    [BinaryField(2, ValueCodecName = Int32WireCodecs.UInt16BigEndian)]
+    public int BigEndian { get; set; }
 }
