@@ -202,6 +202,28 @@ public sealed class TimePacket
 }
 ```
 
+## Integer wire codecs
+
+业务属性可以保持为 `int`，同时通过具名 Value Codec 选择较窄的整数线格式。一次注册全部标准整数 Codec：
+
+```csharp
+var runtime = new SerializerBuilder()
+    .AddIntegerValueCodecs()
+    .Build();
+```
+
+字段和集合共用相同的 Codec 名称；集合字段会将 Codec 应用于每个元素：
+
+```csharp
+[BinaryField(1, ValueCodecName = Int32WireCodecs.UInt8)]
+public int Status { get; set; }
+
+[BinaryField(2, ValueCodecName = Int32WireCodecs.Int16BigEndian)]
+public List<int> Measurements { get; set; } = new();
+```
+
+支持 `UInt8`、`Int8`，以及大小端的 `UInt16`、`Int16`、`UInt24` 和 `Int24`。写入超出对应线格式范围的值会抛出 `ArgumentOutOfRangeException`，不会静默截断。显式大小端 Codec 不受 Runtime 全局字节序影响。
+
 ## Text Codecs
 
 命名空间：
